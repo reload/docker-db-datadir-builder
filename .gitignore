@@ -1,0 +1,5 @@
+docker-compose.yml
+init.sql
+.idea
+opt/datadir-preinit/volume
+trigger/node_modules
