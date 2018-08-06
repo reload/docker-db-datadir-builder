@@ -57,6 +57,7 @@ DUMP_IMAGE_SOURCE=$1
 RUN_TOKEN=$(cat /proc/sys/kernel/random/uuid | tr -dc 'a-z0-9' | fold -w 8 | head -n 1)
 DUMP_VOLUME="dump-source-${RUN_TOKEN}"
 DATADIR_VOLUME="datadir-${RUN_TOKEN}"
+MYSQL_CONFIG="${SCRIPTDIR}/mysql-config/my.cnf"
 # Datadir we're going to wrap in an image.
 INITSCRIPT=""
 # Let the user specify a init-script to be run after the db-import.
@@ -116,6 +117,9 @@ if [ ! -z $INITSCRIPT ]
   then
     docker cp $INITSCRIPT "${DB_CONTAINER_NAME}:/docker-entrypoint-initdb.d/900-init.sql"
 fi
+
+# Get our custom configurations in place.
+docker cp "${MYSQL_CONFIG}" "${DB_CONTAINER_NAME}:/etc/mysql/conf.d/my.cnf"
 
 # Run up a mariadb container with a sql-dump.
 echo "Initializing container with dbdump"
