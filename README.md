@@ -32,15 +32,5 @@ gcloud builds submit \
   --substitutions=_BASENAME="ddsdk",_POST_IMPORT_SCRIPT="standard-drupal8"
 ```
 
-
-- The cloud function trigger can recive events on pushes see
-```
-gcloud functions logs read --limit 50
-```
-
 ## TODO
-- Mount my.cnf while the build is done
-- Implement a cloud function build trigger that reacts when databasedumps are pushed to GCR
-- We have to get some lables into the db-dump images so that the cloud builder knows which version of drupal to build datadirs for - or find some other way to signal that stuff.
-- Build the builder via a trigger
-- Consider whether to support custom init sql-scripts (right now you have to go with our stock drupal7 / drupal8 reset.sql scripts)
+- Consider how to support custom init sql-scripts (right now you have to go with our standard drupal7 / drupal8 reset.sql scripts). Maybe let the user pass in an url where we could fetch the sql from?
