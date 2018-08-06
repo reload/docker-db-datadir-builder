@@ -126,8 +126,8 @@ echo "Initializing container with dbdump"
 docker start -a "${DB_CONTAINER_NAME}"
 
 # Setup the final destination for the datadir
-TMP=$(mktemp -d --suffix=datadir)
-docker cp -a "${DB_CONTAINER_NAME}:/var/lib/mysql" "${TMP}/mysql"
+TMP_DATADIR=$(mktemp -d --suffix=datadir)
+docker cp -a "${DB_CONTAINER_NAME}:/var/lib/mysql" "${TMP_DATADIR}/mysql"
 
 # Build the pre-init data-container, use same tag as the sql-dump image.
 echo "Building the datadir image ${DATADIR_IMAGE_DESTINATION}"
@@ -145,11 +145,11 @@ echo "Building the datadir image ${DATADIR_IMAGE_DESTINATION}"
 # This way we start out with very liberal permissions which makes aufs happy.
 # This might be resolved in a future version of Docker so it is worth checking
 # whether the following can be removed when this script is updated.
-chmod -R a+rw "${TMP}"
-find "${TMP}" -type d -print0 | xargs -0 chmod a+x
+chmod -R a+rw "${TMP_DATADIR}"
+find "${TMP_DATADIR}" -type d -print0 | xargs -0 chmod a+x
 
 # Build using same tag as the one from dbdump.
-docker build --tag "${DATADIR_IMAGE_DESTINATION}" -f "Dockerfile" "${TMP}"
+docker build --tag "${DATADIR_IMAGE_DESTINATION}" -f "Dockerfile" "${TMP_DATADIR}"
 echo "Pushing ${DATADIR_IMAGE_DESTINATION}"
 docker push "${DATADIR_IMAGE_DESTINATION}"
 docker rmi "${DATADIR_IMAGE_DESTINATION}"
