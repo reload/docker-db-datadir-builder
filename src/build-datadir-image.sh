@@ -17,7 +17,7 @@ cleanup() {
   if [[ ! -z "${TMP_DATADIR-}" ]] 
     then
     echo "delete datadir"
-      #rm -rf "${TMP_DATADIR}"
+    rm -rf "${TMP_DATADIR}"
   fi
 
   if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
@@ -34,12 +34,14 @@ cleanup() {
     then
       docker volume rm -f "${DATADIR_VOLUME}"
   fi
-
-  #TODO
 }
 
 trap error ERR
 trap cleanup EXIT
+
+# Make sure our current directory is the scriptdir.
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "${SCRIPTDIR}"
 
 if [ $# -lt 2 ]
   then
@@ -47,12 +49,17 @@ if [ $# -lt 2 ]
     exit
 fi
 
-# Make sure our current directory is the scriptdir.
-SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "${SCRIPTDIR}"
-
-DATADIR_IMAGE_DESTINATION=$2
 DUMP_IMAGE_SOURCE=$1
+DATADIR_IMAGE_DESTINATION=$2
+
+echo "Using source dump ${DUMP_IMAGE_SOURCE} to build a datadir and push it to ${DATADIR_IMAGE_DESTINATION}"
+if [ $# -gt 2 ]
+  then
+  echo " source dump will be supplemented with the initscript ${3} "
+fi
+
+
+
 # Random string used for names.
 RUN_TOKEN=$(cat /proc/sys/kernel/random/uuid | tr -dc 'a-z0-9' | fold -w 8 | head -n 1)
 DUMP_VOLUME="dump-source-${RUN_TOKEN}"
@@ -106,7 +113,6 @@ docker container create \
   -e MYSQL_PASSWORD=db \
   -e INIT_ONLY=yes \
   reload/mariadb:10.3
-# TODO - my.cnf -v "${SCRIPTDIR}:./volume/mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf:ro'
 
 # Now that the container has been created (but not yet started) we can copy
 # files to its volumes.
