@@ -12,6 +12,14 @@ error() {
     exit $?
 }
 
+show_system_state() {
+  echo "Dumping usage status:"
+  echo "w"
+  w
+  echo "df -h"
+  df -h
+}
+
 # Remove all temporary data we can get our hands on.
 cleanup() {
   if [[ ! -z "${TMP_DATADIR-}" ]] 
@@ -83,6 +91,8 @@ fi
 
 $SCRIPTDIR/init-gcloud.sh
 
+show_system_state
+
 # Get the tag and make sure it is available as a dbdump image.
 docker pull "${DUMP_IMAGE_SOURCE}"
 
@@ -117,6 +127,8 @@ docker container create \
 # Now that the container has been created (but not yet started) we can copy
 # files to its volumes.
 
+show_system_state
+
 # Pick up a init-script (ie. sql that should be run after the databasedump has
 # been imported) specified on the commandline, and add it to docker-compose.yml.
 if [ ! -z $INITSCRIPT ]
@@ -134,6 +146,8 @@ docker start -a "${DB_CONTAINER_NAME}"
 # Setup the final destination for the datadir
 TMP_DATADIR=$(mktemp -d --suffix=datadir)
 docker cp -a "${DB_CONTAINER_NAME}:/var/lib/mysql" "${TMP_DATADIR}/mysql"
+
+show_system_state
 
 # Build the pre-init data-container, use same tag as the sql-dump image.
 echo "Building the datadir image ${DATADIR_IMAGE_DESTINATION}"
@@ -159,3 +173,5 @@ docker build --tag "${DATADIR_IMAGE_DESTINATION}" -f "Dockerfile" "${TMP_DATADIR
 echo "Pushing ${DATADIR_IMAGE_DESTINATION}"
 docker push "${DATADIR_IMAGE_DESTINATION}"
 docker rmi "${DATADIR_IMAGE_DESTINATION}"
+
+show_system_state
