@@ -170,8 +170,15 @@ find "${TMP_DATADIR}" -type d -print0 | xargs -0 chmod a+x
 
 # Build using same tag as the one from dbdump.
 docker build --tag "${DATADIR_IMAGE_DESTINATION}" -f "Dockerfile" "${TMP_DATADIR}"
-echo "Pushing ${DATADIR_IMAGE_DESTINATION}"
-docker push "${DATADIR_IMAGE_DESTINATION}"
-docker rmi "${DATADIR_IMAGE_DESTINATION}"
+
+show_system_state
+
+if [[ -z "${NO_PUSH-}" ]]; then
+  echo "Pushing ${DATADIR_IMAGE_DESTINATION}"
+  docker push "${DATADIR_IMAGE_DESTINATION}"
+  docker rmi "${DATADIR_IMAGE_DESTINATION}"
+else
+  echo "Datadir image is available as ${DATADIR_IMAGE_DESTINATION}"
+fi
 
 show_system_state

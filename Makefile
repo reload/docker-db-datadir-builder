@@ -13,6 +13,7 @@ datadir: guard-datadir-source guard-datadir-destination guard-datadir-init build
 	docker run \
 	  --rm \
 	  -v ~/.config/gcloud:/root/.config/gcloud \
+	  -e "NO_PUSH=true" \
 	  -v /var/run/docker.sock:/var/run/docker.sock \
 	  datadir-builder-local ${source} ${destination} ${init}
 	
