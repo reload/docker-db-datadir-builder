@@ -1,0 +1,3 @@
+steps:
+- name: 'eu.gcr.io/reloaddk-data/datadir-builder'
+  args: ['eu.gcr.io/reloaddk-data/db-data:${_BASENAME}-latest', 'eu.gcr.io/reloaddk-data/db-datadir:${_BASENAME}-latest', '${_POST_IMPORT_SCRIPT}']
