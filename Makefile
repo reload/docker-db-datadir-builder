@@ -9,8 +9,10 @@ build:
 	docker build -t datadir-builder-local .
 
 datadir: guard-datadir-source guard-datadir-destination guard-datadir-init build
+	# TODO - we should probably not do the mount if ~/.config/gcloud does not exist.
 	docker run \
 	  --rm \
+	  -v ~/.config/gcloud:/root/.config/gcloud \
 	  -v /var/run/docker.sock:/var/run/docker.sock \
 	  datadir-builder-local ${source} ${destination} ${init}
 	

@@ -3,6 +3,12 @@
 # If the proper variables are detected - setup gcp integration.
 set -eo pipefail
 
+if [[ -d "$HOME/.config/gcloud"  ]]; then
+	echo "Mounted gcloud credentials detected".
+	gcloud auth configure-docker --quiet
+	exit
+fi
+
 if [[ -z $GCLOUD_SERVICE_ACCOUNT || -z $GCLOUD_PROJECT  ]]; then
 	exit
 fi
