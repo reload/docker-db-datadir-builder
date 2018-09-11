@@ -74,7 +74,7 @@ if [ $# -gt 2 ]
       then
       INITSCRIPT="${SCRIPTDIR}/init-sql/${3:9}/reset.sql"
     else
-      echo "init script must be one of standard-drupal7 or standard-drupal8"
+      echo "ERROR: init script must be one of standard-drupal7 or standard-drupal8"
       exit 1
     fi
   else
