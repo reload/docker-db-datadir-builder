@@ -24,24 +24,28 @@ show_system_state() {
 
 # Remove all temporary data we can get our hands on.
 cleanup() {
+  echo "Cleanup called."
   if [[ ! -z "${TMP_DATADIR-}" ]]
     then
-    echo "delete datadir"
-    rm -rf "${TMP_DATADIR}"
+      echo "Removing datadir ${TMP_DATADIR}."
+      rm -rf "${TMP_DATADIR}"
   fi
 
   if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
     then
+      echo "Removing container ${DB_CONTAINER_NAME}."
       docker rm "${DB_CONTAINER_NAME}"
   fi
 
   if [[ ! -z "${DUMP_VOLUME-}" ]]
     then
+      echo "Removing dump volume ${DUMP_VOLUME}."
       docker volume rm -f "${DUMP_VOLUME}"
   fi
 
   if [[ ! -z "${DATADIR_VOLUME-}" ]]
     then
+      echo "Removing datadir volume ${DATADIR_VOLUME}."
       docker volume rm -f "${DATADIR_VOLUME}"
   fi
 }
@@ -154,13 +158,19 @@ show_system_state
 # Do some intermediary cleanup already to avoid blowing up the 100GB disk limit.
 if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
   then
-    echo "Removing ${DB_CONTAINER_NAME} container."
+    echo "Removing container ${DB_CONTAINER_NAME}."
     docker rm "${DB_CONTAINER_NAME}"
+fi
+
+if [[ ! -z "${DUMP_VOLUME-}" ]]
+  then
+    echo "Removing dump volume ${DUMP_VOLUME}."
+    docker volume rm -f "${DUMP_VOLUME}"
 fi
 
 if [[ ! -z "${DATADIR_VOLUME-}" ]]
   then
-    echo "Removing ${DATADIR_VOLUME} volume."
+    echo "Removing datadir volume ${DATADIR_VOLUME}."
     docker volume rm -f "${DATADIR_VOLUME}"
 fi
 
