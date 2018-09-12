@@ -22,7 +22,7 @@ show_system_state() {
 
 # Remove all temporary data we can get our hands on.
 cleanup() {
-  if [[ ! -z "${TMP_DATADIR-}" ]] 
+  if [[ ! -z "${TMP_DATADIR-}" ]]
     then
     echo "delete datadir"
     rm -rf "${TMP_DATADIR}"
@@ -78,7 +78,7 @@ INITSCRIPT=""
 # Let the user specify a init-script to be run after the db-import.
 if [ $# -gt 2 ]
   then
-    if [[ $3 == standard-* ]] 
+    if [[ $3 == standard-* ]]
       then
       INITSCRIPT="${SCRIPTDIR}/init-sql/${3:9}/reset.sql"
     else
@@ -154,15 +154,14 @@ echo "Building the datadir image ${DATADIR_IMAGE_DESTINATION}"
 
 # Ok ... so ....  aufs (which will host the datadir for fulldb build) has this
 # "feature" where if you create a file/directory with a given ownership and
-# permission, subsequent permissions can only be narrower.
-# In other words, if we add, say, a datadir owned by root and then change the
-# ownership to mysql - strange things can happen when you then try to change
-# things. Specifically 
-#   touch datadir/db/a && rm datadir/db/a 
-# will fail on the rm. So, to avoid all of that, we do something slightly crazy
-# , we make everything in the datadir world write/readable - make a mental note
-# of never ever allowing this image to hit prod - and then add the datadir. 
-# This way we start out with very liberal permissions which makes aufs happy.
+# permission, subsequent permissions can only be narrower. In other words, if we
+# add, say, a datadir owned by root and then change the ownership to mysql -
+# strange things can happen when you then try to change things. Specifically
+# touch datadir/db/a && rm datadir/db/a will fail on the rm.
+# So, to avoid all of that, we do something slightly crazy, we make everything
+# in the datadir world write/readable - make a mental note of never ever
+# allowing this image to hit prod - and then add the datadir. This way we start
+# out with very liberal permissions which makes aufs happy.
 # This might be resolved in a future version of Docker so it is worth checking
 # whether the following can be removed when this script is updated.
 chmod -R a+rw "${TMP_DATADIR}"
