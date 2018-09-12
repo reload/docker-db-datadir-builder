@@ -18,6 +18,8 @@ show_system_state() {
   w
   echo "df -h"
   df -h
+  echo "ls -al"
+  ls -al
 }
 
 # Remove all temporary data we can get our hands on.
@@ -146,6 +148,21 @@ docker start -a "${DB_CONTAINER_NAME}"
 # Setup the final destination for the datadir
 TMP_DATADIR=$(mktemp -d --suffix=datadir)
 docker cp -a "${DB_CONTAINER_NAME}:/var/lib/mysql" "${TMP_DATADIR}/mysql"
+
+show_system_state
+
+# Do some intermediary cleanup already to avoid blowing up the 100GB disk limit.
+if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
+  then
+    echo "Removing ${DB_CONTAINER_NAME} container."
+    docker rm "${DB_CONTAINER_NAME}"
+fi
+
+if [[ ! -z "${DATADIR_VOLUME-}" ]]
+  then
+    echo "Removing ${DATADIR_VOLUME} volume."
+    docker volume rm -f "${DATADIR_VOLUME}"
+fi
 
 show_system_state
 
