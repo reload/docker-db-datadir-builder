@@ -18,27 +18,45 @@ show_system_state() {
   w
   echo "df -h"
   df -h
-  echo "df -i"
-  df -i
+}
+
+# Remove volumes and containers.
+cleanup() {
+  echo "Cleanup called."
+
+  if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
+  then
+    echo "Removing container ${DB_CONTAINER_NAME}."
+    docker rm -f "${DB_CONTAINER_NAME}"
+  fi
+
+  if [[ ! -z "${DUMP_VOLUME-}" ]]
+    then
+      echo "Removing dump volume ${DUMP_VOLUME}."
+      docker volume rm -f "${DUMP_VOLUME}"
+  fi
+
+  if [[ ! -z "${DATADIR_VOLUME-}" ]]
+    then
+      echo "Removing datadir volume ${DATADIR_VOLUME}."
+      docker volume rm -f "${DATADIR_VOLUME}"
+  fi
 }
 
 # Remove all temporary data we can get our hands on.
-cleanup() {
-  echo "Cleanup called."
+cleanup_tmp() {
+  echo "Cleanup temp data called."
 
   if [[ ! -z "${TMP_DATADIR-}" ]]
     then
       echo "Removing datadir ${TMP_DATADIR}."
       rm -rf "${TMP_DATADIR}"
   fi
-
-  show_system_state
-
-  echo "Cleanup done."
 }
 
+
 trap error ERR
-trap cleanup EXIT
+trap cleanup_tmp EXIT
 
 # Make sure our current directory is the scriptdir.
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -58,7 +76,6 @@ if [ $# -gt 2 ]
   then
   echo " source dump will be supplemented with the initscript ${3} "
 fi
-
 
 
 # Random string used for names.
@@ -140,27 +157,9 @@ docker start -a "${DB_CONTAINER_NAME}"
 TMP_DATADIR=$(mktemp -d --suffix=datadir)
 docker cp -a "${DB_CONTAINER_NAME}:/var/lib/mysql" "${TMP_DATADIR}/mysql"
 
-show_system_state
-
 # Do some intermediary cleanup already to avoid blowing up the 100GB disk limit.
-if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
-  then
-    echo "Removing container ${DB_CONTAINER_NAME}."
-    docker rm -f "${DB_CONTAINER_NAME}"
-fi
-
-if [[ ! -z "${DUMP_VOLUME-}" ]]
-  then
-    echo "Removing dump volume ${DUMP_VOLUME}."
-    docker volume rm -f "${DUMP_VOLUME}"
-fi
-
-if [[ ! -z "${DATADIR_VOLUME-}" ]]
-  then
-    echo "Removing datadir volume ${DATADIR_VOLUME}."
-    docker volume rm -f "${DATADIR_VOLUME}"
-fi
-
+show_system_state
+cleanup
 show_system_state
 
 # Build the pre-init data-container, use same tag as the sql-dump image.
