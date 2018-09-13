@@ -18,36 +18,25 @@ show_system_state() {
   w
   echo "df -h"
   df -h
-  echo "ls -al"
-  ls -al
+  echo "df -i"
+  df -i
+  echo "docker -D info"
+  docker --debug info
 }
 
 # Remove all temporary data we can get our hands on.
 cleanup() {
   echo "Cleanup called."
+
   if [[ ! -z "${TMP_DATADIR-}" ]]
     then
       echo "Removing datadir ${TMP_DATADIR}."
       rm -rf "${TMP_DATADIR}"
   fi
 
-  if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
-    then
-      echo "Removing container ${DB_CONTAINER_NAME}."
-      docker rm -f "${DB_CONTAINER_NAME}"
-  fi
+  show_system_state
 
-  if [[ ! -z "${DUMP_VOLUME-}" ]]
-    then
-      echo "Removing dump volume ${DUMP_VOLUME}."
-      docker volume rm -f "${DUMP_VOLUME}"
-  fi
-
-  if [[ ! -z "${DATADIR_VOLUME-}" ]]
-    then
-      echo "Removing datadir volume ${DATADIR_VOLUME}."
-      docker volume rm -f "${DATADIR_VOLUME}"
-  fi
+  echo "Cleanup done."
 }
 
 trap error ERR
@@ -130,10 +119,10 @@ docker container create \
   -e INIT_ONLY=yes \
   reload/mariadb:10.3
 
+show_system_state
+
 # Now that the container has been created (but not yet started) we can copy
 # files to its volumes.
-
-show_system_state
 
 # Pick up a init-script (ie. sql that should be run after the databasedump has
 # been imported) specified on the commandline, and add it to docker-compose.yml.
