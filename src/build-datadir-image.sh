@@ -20,8 +20,6 @@ show_system_state() {
   df -h
   echo "df -i"
   df -i
-  echo "docker -D info"
-  docker --debug info
 }
 
 # Remove all temporary data we can get our hands on.
