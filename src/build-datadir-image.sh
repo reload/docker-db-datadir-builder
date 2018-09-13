@@ -34,7 +34,7 @@ cleanup() {
   if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
     then
       echo "Removing container ${DB_CONTAINER_NAME}."
-      docker rm "${DB_CONTAINER_NAME}"
+      docker rm -f "${DB_CONTAINER_NAME}"
   fi
 
   if [[ ! -z "${DUMP_VOLUME-}" ]]
@@ -159,7 +159,7 @@ show_system_state
 if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
   then
     echo "Removing container ${DB_CONTAINER_NAME}."
-    docker rm "${DB_CONTAINER_NAME}"
+    docker rm -f "${DB_CONTAINER_NAME}"
 fi
 
 if [[ ! -z "${DUMP_VOLUME-}" ]]
