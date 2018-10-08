@@ -77,12 +77,12 @@ if [ $# -gt 2 ]
   echo " source dump will be supplemented with the initscript ${3} "
 fi
 
-
 # Random string used for names.
 RUN_TOKEN=$(cat /proc/sys/kernel/random/uuid | tr -dc 'a-z0-9' | fold -w 8 | head -n 1)
 DUMP_VOLUME="dump-source-${RUN_TOKEN}"
 DATADIR_VOLUME="datadir-${RUN_TOKEN}"
 MYSQL_CONFIG="${SCRIPTDIR}/mysql-config/my.cnf"
+INIT_ONLY_ENTRYPOINT="${SCRIPTDIR}/init-only-entrypoint.sh"
 # Datadir we're going to wrap in an image.
 INITSCRIPT=""
 # Let the user specify a init-script to be run after the db-import.
@@ -122,17 +122,16 @@ docker run \
 docker volume create "${DATADIR_VOLUME}"
 
 # Setup the mariadb container we're about to start
+# Lock down the version to make our entrypoint override more stable.
 DB_CONTAINER_NAME="mariadb-${RUN_TOKEN}"
 docker container create \
   --name "${DB_CONTAINER_NAME}" \
-  -v "${DUMP_VOLUME}:/docker-entrypoint-initdb.d" \
   -v "${DATADIR_VOLUME}:/var/lib/mysql" \
   -e MYSQL_ROOT_PASSWORD=root \
   -e MYSQL_DATABASE=db \
   -e MYSQL_USER=db \
   -e MYSQL_PASSWORD=db \
-  -e INIT_ONLY=yes \
-  reload/mariadb:10.3
+  mariadb:10.3.9
 
 show_system_state
 
@@ -148,6 +147,9 @@ fi
 
 # Get our custom configurations in place.
 docker cp "${MYSQL_CONFIG}" "${DB_CONTAINER_NAME}:/etc/mysql/conf.d/my.cnf"
+
+# Get our override entrypoint in place.
+docker cp "${INIT_ONLY_ENTRYPOINT}" "${DB_CONTAINER_NAME}:/docker-entrypoint.sh"
 
 # Run up a mariadb container with a sql-dump.
 echo "Initializing container with dbdump"
