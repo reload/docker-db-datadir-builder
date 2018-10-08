@@ -126,6 +126,7 @@ docker volume create "${DATADIR_VOLUME}"
 DB_CONTAINER_NAME="mariadb-${RUN_TOKEN}"
 docker container create \
   --name "${DB_CONTAINER_NAME}" \
+  -v "${DUMP_VOLUME}:/docker-entrypoint-initdb.d" \
   -v "${DATADIR_VOLUME}:/var/lib/mysql" \
   -e MYSQL_ROOT_PASSWORD=root \
   -e MYSQL_DATABASE=db \
