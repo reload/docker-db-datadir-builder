@@ -44,6 +44,12 @@ cleanup() {
       echo "Removing datadir volume ${DATADIR_VOLUME}."
       docker volume rm -f "${DATADIR_VOLUME}"
   fi
+
+  if [[ ! -z "${DATADIR_CONTAINER:-}" ]]
+    then
+      echo "Removing container ${DATADIR_CONTAINER}."
+      docker rm -f "${DATADIR_CONTAINER}"
+  fi
   show_system_state
 }
 
@@ -189,9 +195,15 @@ echo "Building the datadir image ${DATADIR_IMAGE_DESTINATION}"
 chmod -R a+rw "${TMP_DATADIR}"
 find "${TMP_DATADIR}" -type d -print0 | xargs -0 chmod a+x
 
-# Build using same tag as the one from dbdump.
-docker build --tag "${DATADIR_IMAGE_DESTINATION}" -f "Dockerfile" "${TMP_DATADIR}"
+# Create a temporary container for the datadir. Instead of starting it we'll
+# do a snapshot after the data has been copied into it and push that tag.
+DATADIR_CONTAINER="datadir_container-${RUN_TOKEN}"
+docker container create --name "${DATADIR_CONTAINER}" tianon/true
+docker cp "${TMP_DATADIR}/var" "${DATADIR_CONTAINER}:/"
 
+# Do the commit and track the space usage.
+show_system_state
+docker commit "${DATADIR_CONTAINER}" "${DATADIR_IMAGE_DESTINATION}"
 show_system_state
 
 if [[ -z "${NO_PUSH-}" ]]; then
