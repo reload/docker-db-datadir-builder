@@ -14,10 +14,13 @@ error() {
 
 show_system_state() {
   echo "Dumping usage status:"
-  echo "w"
+  echo "*** LOCAL w"
   w
-  echo "df -h"
+  echo "*** LOCAL df -h"
   df -h
+
+  echo "*** CONTAINER df -h"
+  docker run alpine df -h
 }
 
 # Remove volumes and containers.
@@ -41,6 +44,7 @@ cleanup() {
       echo "Removing datadir volume ${DATADIR_VOLUME}."
       docker volume rm -f "${DATADIR_VOLUME}"
   fi
+  show_system_state
 }
 
 # Remove all temporary data we can get our hands on.
@@ -192,8 +196,7 @@ if [[ -z "${NO_PUSH-}" ]]; then
   echo "Pushing ${DATADIR_IMAGE_DESTINATION}"
   docker push "${DATADIR_IMAGE_DESTINATION}"
   docker rmi "${DATADIR_IMAGE_DESTINATION}"
+  show_system_state
 else
   echo "Datadir image is available as ${DATADIR_IMAGE_DESTINATION}"
 fi
-
-show_system_state
