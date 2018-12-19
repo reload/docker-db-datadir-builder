@@ -27,19 +27,19 @@ show_system_state() {
 cleanup() {
   echo "Cleanup called."
 
-  if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
+  if [[ ! -z "${DB_CONTAINER_NAME:-}" ]]
   then
     echo "Removing container ${DB_CONTAINER_NAME}."
     docker rm -f "${DB_CONTAINER_NAME}"
   fi
 
-  if [[ ! -z "${DUMP_VOLUME-}" ]]
+  if [[ ! -z "${DUMP_VOLUME:-}" ]]
     then
       echo "Removing dump volume ${DUMP_VOLUME}."
       docker volume rm -f "${DUMP_VOLUME}"
   fi
 
-  if [[ ! -z "${DATADIR_VOLUME-}" ]]
+  if [[ ! -z "${DATADIR_VOLUME:-}" ]]
     then
       echo "Removing datadir volume ${DATADIR_VOLUME}."
       docker volume rm -f "${DATADIR_VOLUME}"
