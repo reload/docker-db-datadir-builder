@@ -160,9 +160,11 @@ docker cp "${INIT_ONLY_ENTRYPOINT}" "${DB_CONTAINER_NAME}:/docker-entrypoint.sh"
 echo "Initializing container with dbdump"
 docker start -a "${DB_CONTAINER_NAME}"
 
-# Setup the final destination for the datadir
-TMP_DATADIR=$(mktemp -d --suffix=datadir)
-docker cp -a "${DB_CONTAINER_NAME}:/var/lib/mysql" "${TMP_DATADIR}/mysql"
+# Setup the final destination for the datadir, we use /workspace as it's
+# a mountpoint with plenty of spaces in Google Cloud Build.
+TMP_DATADIR=/workspace/datadir
+mkdir -p "${TMP_DATADIR}/var/lib/"
+docker cp -a "${DB_CONTAINER_NAME}:/var/lib/mysql" "${TMP_DATADIR}/var/lib/mysql"
 
 # Do some intermediary cleanup already to avoid blowing up the 100GB disk limit.
 show_system_state
