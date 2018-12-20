@@ -14,33 +14,43 @@ error() {
 
 show_system_state() {
   echo "Dumping usage status:"
-  echo "w"
+  echo "*** LOCAL w"
   w
-  echo "df -h"
+  echo "*** LOCAL df -h"
   df -h
+
+  echo "*** CONTAINER df -h"
+  docker run alpine df -h
 }
 
 # Remove volumes and containers.
 cleanup() {
   echo "Cleanup called."
 
-  if [[ ! -z "${DB_CONTAINER_NAME-}" ]]
+  if [[ ! -z "${DB_CONTAINER_NAME:-}" ]]
   then
     echo "Removing container ${DB_CONTAINER_NAME}."
     docker rm -f "${DB_CONTAINER_NAME}"
   fi
 
-  if [[ ! -z "${DUMP_VOLUME-}" ]]
+  if [[ ! -z "${DUMP_VOLUME:-}" ]]
     then
       echo "Removing dump volume ${DUMP_VOLUME}."
       docker volume rm -f "${DUMP_VOLUME}"
   fi
 
-  if [[ ! -z "${DATADIR_VOLUME-}" ]]
+  if [[ ! -z "${DATADIR_VOLUME:-}" ]]
     then
       echo "Removing datadir volume ${DATADIR_VOLUME}."
       docker volume rm -f "${DATADIR_VOLUME}"
   fi
+
+  if [[ ! -z "${DATADIR_CONTAINER:-}" ]]
+    then
+      echo "Removing container ${DATADIR_CONTAINER}."
+      docker rm -f "${DATADIR_CONTAINER}"
+  fi
+  show_system_state
 }
 
 # Remove all temporary data we can get our hands on.
@@ -156,9 +166,11 @@ docker cp "${INIT_ONLY_ENTRYPOINT}" "${DB_CONTAINER_NAME}:/docker-entrypoint.sh"
 echo "Initializing container with dbdump"
 docker start -a "${DB_CONTAINER_NAME}"
 
-# Setup the final destination for the datadir
-TMP_DATADIR=$(mktemp -d --suffix=datadir)
-docker cp -a "${DB_CONTAINER_NAME}:/var/lib/mysql" "${TMP_DATADIR}/mysql"
+# Setup the final destination for the datadir, we use /workspace as it's
+# a mountpoint with plenty of spaces in Google Cloud Build.
+TMP_DATADIR=/workspace/datadir
+mkdir -p "${TMP_DATADIR}/var/lib/"
+docker cp -a "${DB_CONTAINER_NAME}:/var/lib/mysql" "${TMP_DATADIR}/var/lib/mysql"
 
 # Do some intermediary cleanup already to avoid blowing up the 100GB disk limit.
 show_system_state
@@ -183,17 +195,22 @@ echo "Building the datadir image ${DATADIR_IMAGE_DESTINATION}"
 chmod -R a+rw "${TMP_DATADIR}"
 find "${TMP_DATADIR}" -type d -print0 | xargs -0 chmod a+x
 
-# Build using same tag as the one from dbdump.
-docker build --tag "${DATADIR_IMAGE_DESTINATION}" -f "Dockerfile" "${TMP_DATADIR}"
+# Create a temporary container for the datadir. Instead of starting it we'll
+# do a snapshot after the data has been copied into it and push that tag.
+DATADIR_CONTAINER="datadir_container-${RUN_TOKEN}"
+docker container create --name "${DATADIR_CONTAINER}" tianon/true
+docker cp "${TMP_DATADIR}/var" "${DATADIR_CONTAINER}:/"
 
+# Do the commit and track the space usage.
+show_system_state
+docker commit "${DATADIR_CONTAINER}" "${DATADIR_IMAGE_DESTINATION}"
 show_system_state
 
 if [[ -z "${NO_PUSH-}" ]]; then
   echo "Pushing ${DATADIR_IMAGE_DESTINATION}"
   docker push "${DATADIR_IMAGE_DESTINATION}"
   docker rmi "${DATADIR_IMAGE_DESTINATION}"
+  show_system_state
 else
   echo "Datadir image is available as ${DATADIR_IMAGE_DESTINATION}"
 fi
-
-show_system_state
