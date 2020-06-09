@@ -1,0 +1,15 @@
+version: 2
+updates:
+- package-ecosystem: docker
+  directory: "/"
+  schedule:
+    interval: daily
+    time: '04:00'
+    timezone: Europe/Copenhagen
+  open-pull-requests-limit: 10
+  assignees:
+  - danquah
+  ignore:
+  - dependency-name: buildpack-deps
+    versions:
+    - ">= 19.10.a, < 19.11"
