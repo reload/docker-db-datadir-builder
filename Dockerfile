@@ -1,4 +1,4 @@
-FROM buildpack-deps:18.04
+FROM buildpack-deps:21.04
 
 RUN apt-get -y update && \
     apt-get -y install \
